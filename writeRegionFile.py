@@ -10,7 +10,7 @@ from pyregion.parser_helper import Shape
 
 
 #--------------------------------------------------
-def search(dictionary, searchFor):
+def search(dictionary_list, searchFor):
     """
     Obtain the position of an entry for a given searchString in a keyword. (TypeErrors will be ignored).
 
@@ -24,18 +24,20 @@ def search(dictionary, searchFor):
     """
 
     result = []
+    str_keys = [k for k in dictionary_list[0] if hasattr(dictionary_list[0][k], 'find')]
+    return [row for row in dictionary_list if any([searchFor in val for val in [row[k] for k in str_keys]])]
 
-    for keyword in dictionary:
-        try:
-            for e, entry in enumerate(dictionary[keyword]):
-                if searchFor in entry:
-                    result.append(e)
+    #for keyword in dictionary:
+    #    try:
+    #        for e, entry in enumerate(dictionary[keyword]):
+    #            if searchFor in entry:
+    #                result.append(e)
 
-        except TypeError:
-            #print "TypeError (\"%s\") --> continue with next keyword" % keyword
-            continue
+    #    except TypeError:
+    #        #print "TypeError (\"%s\") --> continue with next keyword" % keyword
+    #        continue
 
-    return result
+    #return result
 
 
 #---------------------------------------------------------
@@ -59,21 +61,21 @@ def writeRegionFile(outname, catalog, matches, color='blue', width=2,
 
     shapeList = []
 
-    for index in matches:
+    for row in matches:
 
-        name = catalog['name'][index]
-        stype = catalog['stype'][index]
-        coords = catalog['coord'][index]
-        epoch = catalog['epoch'][index]
-        shape = catalog['shape'][index]
-        sunit = catalog['sunit'][index]
-        text = catalog['text'][index]
+        name = row['name']
+        stype = row['stype']
+        coords = row['coord']
+        epoch = row['epoch']
+        shape = row['shape']
+        sunit = row['sunit']
+        text = row['text']
 
  
         #
         # do some coordinate system conversion, if necessary
 
-        if 'equatorial' in catalog['ctype'][index]:
+        if 'equatorial' in row['ctype']:
             if epoch == 1950:
                 frame = coord.FK4
                 pos = coord.SkyCoord(coords, frame=frame, unit=(u.hourangle, u.deg))
@@ -134,6 +136,7 @@ if __name__ == '__main__':
     # create the dictionary
 
     catalog = createDictionary.createDictionary()
+    tbl = Table(catalog)
 
     #
     # search the dictionary; obtain a list of the position of the matches in the dictionary
@@ -142,7 +145,8 @@ if __name__ == '__main__':
     searchString = 'Benson'
 
     matches = search(catalog, searchString)
-    print("Found %i / %i matches." % (len(matches), len(catalog['name'])))
+    print(matches)
+    print("Found %i / %i matches." % (len(matches), len(catalog)))
 
     #
     # provide some general parameters for the regions file setup

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 from collections import defaultdict
 
@@ -103,16 +104,15 @@ def createDictionary():
 
     #regions.append(Region('', 'hii', '', 'equatorial', 1950, 'ellipse', '', 'arcsec', 'dePree, 1998', 42.8, 'GHz'))
 
-    '''
     #
     # store information in list containing sub-dictionaries
 
-    regions = []
-    for r in reg:
-        regions.append({'name': r.name, 'otype': r.otype, 'coord': r.coord, 'ctype': r.ctype, 'epoch': r.epoch,
+    regiondicts=[]
+    for r in regions:
+        regiondicts.append({'name': r.name, 'otype': r.otype, 'coord': r.coord, 'ctype': r.ctype, 'epoch': r.epoch,
                         'stype': r.stype, 'shape': r.shape, 'sunit': r.sunit, 'text': r.text,
                         'ref': r.ref, 'freq': r.freq, 'funit': r.funit})
-    print regions
+    return regiondicts
     '''
 
     #
@@ -135,3 +135,4 @@ def createDictionary():
 
     #print regions_mod
     return regions_mod
+    '''
