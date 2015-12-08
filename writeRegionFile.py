@@ -4,7 +4,6 @@ from __future__ import print_function
 import createDictionary
 import astropy.coordinates as coord
 import astropy.units as u
-from astropy.table import Table
 import pyregion
 from pyregion.parser_helper import Shape
 
@@ -139,7 +138,6 @@ if __name__ == '__main__':
     # create the dictionary
 
     catalog = createDictionary.createDictionary()
-    tbl = Table(catalog)
 
     #
     # search the dictionary; obtain a list of the position of the matches in the dictionary
