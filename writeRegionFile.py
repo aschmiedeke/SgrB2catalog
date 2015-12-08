@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import createDictionary
 import astropy.coordinates as coord
 import astropy.units as u
+from astropy.table import Table
+import pyregion
+from pyregion.parser_helper import Shape
 
 
 #--------------------------------------------------
@@ -35,7 +39,10 @@ def search(dictionary, searchFor):
 
 
 #---------------------------------------------------------
-def writeRegionFile(outname, gParam, catalog, matches):
+
+def writeRegionFile(outname, catalog, matches, color='blue', width=2,
+                    fonttype='helvetica', fontsize=10, fontweight='normal',
+                    fontfamily='roman'):
     '''
     Writes the region file.
 
@@ -47,12 +54,10 @@ def writeRegionFile(outname, gParam, catalog, matches):
 
     '''
 
-    f = open(outname, 'w')
+    fontpars = dict(fontweight=fontweight, fonttype=fonttype,
+                    fontfamily=fontfamily, fontsize=fontsize)
 
-    f.write('# Region file for:at: DS9 version 4.1\n')
-    f.write('global color=%s dashlist=8 3 width=%i font=\"%s %.1f normal roman\" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n'
-            % (gParam['color'], gParam['width'], gParam['fonttype'], gParam['fontsize']))
-    f.write('fk5\n')
+    shapeList = []
 
     for index in matches:
 
@@ -64,6 +69,7 @@ def writeRegionFile(outname, gParam, catalog, matches):
         sunit = catalog['sunit'][index]
         text = catalog['text'][index]
 
+ 
         #
         # do some coordinate system conversion, if necessary
 
@@ -78,35 +84,47 @@ def writeRegionFile(outname, gParam, catalog, matches):
                 pos_fk5 = coord.SkyCoord(coords, frame=frame, unit=(u.hourangle, u.deg))
 
             else:
-                print "Cannot read epoch and/or ctype. Skipping index %i" % index
+                print("Cannot read epoch and/or ctype. Skipping index %i" % index)
                 continue
 
-
-        #
-        # get the size
 
         if 'ellipse' in stype:
 
             shape_list = shape.split(',')
 
-            rmaj = shape_list[0]
-            rmin = shape_list[1]
-            rpa = shape_list[2]
+            rmaj = u.Quantity(float(shape_list[0].strip()), sunit)
+            rmin = u.Quantity(float(shape_list[1].strip()), sunit)
+            rpa = shape_list[2].strip()
 
-        if 'arcsec' in sunit:
-            unit = '"'
+            shape = Shape(stype,
+                          (pyregion.region_numbers.SimpleNumber(pos_fk5.ra.deg),
+                           pyregion.region_numbers.SimpleNumber(pos_fk5.dec.deg),
+                           pyregion.region_numbers.AngularDistance('{0}"'.format(rmaj.to(u.arcsec).value)),
+                           pyregion.region_numbers.AngularDistance('{0}"'.format(rmin.to(u.arcsec).value)),
+                           pyregion.region_numbers.AngularDistance(rpa),))
+            shape.coord_format = 'fk5'
+            shape.attr = ([],{})
+            shape.attr[1].update({'color': color,
+                                  'text': "{0}{2}{1}".format(name,text, ", " if text else ""),
+                                  'width': str(width),
+                                  'font': "{fonttype} {fontsize} {fontweight} {fontfamily}".format(**fontpars),
+                                 })
+            shape.coord_list = [pos_fk5.ra.deg, pos_fk5.dec.deg,
+                                rmaj.to(u.deg).value, rmin.to(u.deg).value,
+                                float(rpa)]
+            shape.comment = "text={{{text}}}".format(**shape.attr[1])
+            print(shape, shape.attr)
 
-        #
-        # combine the label
 
-        if text != '':
-            label = '%s, %s' % (name, text)
-        else:
-            label = '%s' % name
 
-        f.write('%s(%.5f, %.5f, %s%s, %s%s, %s) # text={%s}\n' % (stype, pos_fk5.ra.deg, pos_fk5.dec.deg,
-                                                                rmaj, unit, rmin, unit, rpa, label))
-    f.close()
+
+
+        shapeList.append(shape)
+
+    SL = pyregion.ShapeList(shapeList)
+    SL.write(outname)
+
+    return SL
 
 
 #---------------------------------------------------------
@@ -124,7 +142,7 @@ if __name__ == '__main__':
     searchString = 'Benson'
 
     matches = search(catalog, searchString)
-    print "Found %i / %i matches." % (len(matches), len(catalog['name']))
+    print("Found %i / %i matches." % (len(matches), len(catalog['name'])))
 
     #
     # provide some general parameters for the regions file setup
@@ -137,4 +155,4 @@ if __name__ == '__main__':
               'fonttype': 'helvetica',
               'fontsize': 10}
 
-    writeRegionFile(outname, gParam, catalog, matches)
+    sl = writeRegionFile(outname, catalog, matches, **gParam)
