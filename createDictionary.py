@@ -113,26 +113,3 @@ def createDictionary():
                         'stype': r.stype, 'shape': r.shape, 'sunit': r.sunit, 'text': r.text,
                         'ref': r.ref, 'freq': r.freq, 'funit': r.funit})
     return regiondicts
-    '''
-
-    #
-    # store information in dictionary containing sub-lists
-
-    regions_mod = defaultdict(list)
-
-    for r in regions:
-        regions_mod['name'].append(r.name)
-        regions_mod['coord'].append(r.coord)
-        regions_mod['ctype'].append(r.ctype)
-        regions_mod['epoch'].append(r.epoch)
-        regions_mod['stype'].append(r.stype)
-        regions_mod['shape'].append(r.shape)
-        regions_mod['sunit'].append(r.sunit)
-        regions_mod['ref'].append(r.ref)
-        regions_mod['freq'].append(r.freq)
-        regions_mod['funit'].append(r.funit)
-        regions_mod['text'].append(r.text)
-
-    #print regions_mod
-    return regions_mod
-    '''
