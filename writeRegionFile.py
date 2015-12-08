@@ -22,11 +22,10 @@ def search(dictionary_list, searchFor):
 
     """
 
-    result = []
     str_keys = [k for k in dictionary_list[0] if hasattr(dictionary_list[0][k], 'find')]
     return [row for row in dictionary_list
             if any([searchFor in val
-                    for val in 
+                    for val in
                     [row[k] for k in str_keys]])]
 
     #for keyword in dictionary:
